@@ -40,7 +40,7 @@ export const GET = async (request: Request): Promise<NextResponse> => {
     return NextResponse.json({
       profilePayload: {
         age: 30,
-        incomeYear: 40000000,
+        annualIncome: 40000000,
         gender: "male",
       },
       versionId: "demo-profile",

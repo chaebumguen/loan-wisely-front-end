@@ -8,6 +8,12 @@ export type ProductCardProps = {
   reason: string;
   suitabilityScore: number;
   tags: string[];
+  estimationDetails?: {
+    factorCode: string;
+    factorName: string;
+    factorValue: string;
+    contribution?: string | null;
+  }[];
 };
 
 const ProductCard = ({
@@ -19,6 +25,7 @@ const ProductCard = ({
   reason,
   suitabilityScore,
   tags,
+  estimationDetails = [],
 }: ProductCardProps) => (
   <article className="rounded-3xl border border-stone-200 bg-white px-6 py-5 shadow-sm">
     <div className="flex items-start justify-between gap-6">
@@ -53,6 +60,19 @@ const ProductCard = ({
         </span>
       ))}
     </div>
+    {estimationDetails.length > 0 && (
+      <div className="mt-4 rounded-2xl bg-stone-50 px-4 py-3 text-xs text-stone-600">
+        <div className="mb-2 text-xs font-semibold text-stone-700">추정 상세</div>
+        <div className="grid gap-1">
+          {estimationDetails.map((detail) => (
+            <div key={`${id}-${detail.factorCode}-${detail.factorValue}`} className="flex justify-between gap-3">
+              <span>{detail.factorName || detail.factorCode}</span>
+              <span className="font-semibold text-stone-700">{detail.factorValue}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
   </article>
 );
 

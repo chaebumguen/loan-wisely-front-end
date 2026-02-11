@@ -1,4 +1,4 @@
-// Recommendation list proxy.
+// LV1 신용정보 저장 요청을 백엔드로 전달하는 BFF 라우트
 import { NextResponse } from "next/server";
 
 import { env } from "@/infra/env";
@@ -12,10 +12,16 @@ const buildTargetUrl = (requestUrl: string): string => {
 
 const forwardHeaders = (request: Request): HeadersInit => {
   const headers = new Headers();
+  const contentType = request.headers.get("content-type");
   const authorization = request.headers.get("authorization");
+
+  if (contentType) {
+    headers.set("content-type", contentType);
+  }
   if (authorization) {
     headers.set("authorization", authorization);
   }
+
   return headers;
 };
 
@@ -29,21 +35,20 @@ const respond = (body: unknown, status: number): NextResponse => {
   return NextResponse.json(body, { status });
 };
 
-const mockResponse = (): NextResponse =>
-  NextResponse.json({ items: [], page: 0, size: 10, total: 0 });
-
-export const GET = async (request: Request): Promise<NextResponse> => {
+export const PUT = async (request: Request): Promise<NextResponse> => {
   if (env.backendUrl === "") {
-    return mockResponse();
+    return NextResponse.json({ userId: 0, age: 30, incomeYear: 40000000, gender: "male" });
   }
 
   const targetUrl = buildTargetUrl(request.url);
   const headers = forwardHeaders(request);
+  const body = await request.text();
 
   try {
     const data = await fetcher<unknown>(targetUrl, {
-      method: "GET",
+      method: "PUT",
       headers,
+      body,
     });
     return respond(data, 200);
   } catch (error) {

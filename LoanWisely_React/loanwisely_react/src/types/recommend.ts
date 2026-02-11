@@ -16,6 +16,14 @@ export type RecommendProduct = {
   reason: string;
   suitabilityScore: number;
   riskNote: string;
+  estimationDetails?: RecommendEstimationDetail[];
+};
+
+export type RecommendEstimationDetail = {
+  factorCode: string;
+  factorName: string;
+  factorValue: string;
+  contribution?: string | null;
 };
 
 export type RecommendDetail = {

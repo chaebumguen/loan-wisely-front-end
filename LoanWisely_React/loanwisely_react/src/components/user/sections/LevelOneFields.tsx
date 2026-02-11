@@ -24,7 +24,7 @@ const LevelOneFields = ({ register }: LevelOneFieldsProps) => (
         type="number"
         placeholder="연소득을 입력하세요"
         className="rounded-2xl border border-stone-300 px-4 py-2"
-        {...register("incomeYear", { valueAsNumber: true })}
+        {...register("annualIncome", { valueAsNumber: true })}
       />
     </label>
     <div className="grid gap-2 text-sm text-stone-700">

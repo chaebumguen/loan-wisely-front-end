@@ -1,7 +1,7 @@
 ﻿"use client";
 // User input wizard UI.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
@@ -20,6 +20,7 @@ import { type Level } from "@/components/user/constants";
 import type { FormValues } from "@/components/user/types";
 
 import { useRecommendFlow } from "@/hooks/useRecommendFlow";
+import { getAccessToken } from "@/infra/auth";
 import type { UserInputPayload } from "@/types/user";
 
 const emptyToNull = (value: string): string | null =>
@@ -30,15 +31,22 @@ const UserInputPage = () => {
   const router = useRouter();
   const recommendFlow = useRecommendFlow();
 
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token) {
+      router.replace("/login");
+    }
+  }, [router]);
+
   const { register, getValues } = useForm<FormValues>({
     defaultValues: {
       age: null,
-      incomeYear: null,
+      annualIncome: null,
       gender: "",
       employmentType: "",
       residenceType: "",
       loanPurpose: "",
-      totalDebt: null,
+      totalDebtAmount: null,
       existingLoanCount: null,
       consent: false,
     },
@@ -58,7 +66,7 @@ const UserInputPage = () => {
     const payload: UserInputPayload = {
       lv1: {
         age: values.age ?? null,
-        incomeYear: values.incomeYear ?? null,
+        annualIncome: values.annualIncome ?? null,
         gender: values.gender === "" ? null : values.gender,
       },
       lv2: {
@@ -67,7 +75,7 @@ const UserInputPage = () => {
       },
       lv3: {
         loanPurpose: emptyToNull(values.loanPurpose),
-        totalDebt: values.totalDebt ?? null,
+        totalDebtAmount: values.totalDebtAmount ?? null,
         existingLoanCount: values.existingLoanCount ?? null,
         consent: values.consent,
       },

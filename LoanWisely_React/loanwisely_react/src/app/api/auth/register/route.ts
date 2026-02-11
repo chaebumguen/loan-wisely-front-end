@@ -1,4 +1,4 @@
-// Recommendation list proxy.
+// User register proxy.
 import { NextResponse } from "next/server";
 
 import { env } from "@/infra/env";
@@ -12,9 +12,9 @@ const buildTargetUrl = (requestUrl: string): string => {
 
 const forwardHeaders = (request: Request): HeadersInit => {
   const headers = new Headers();
-  const authorization = request.headers.get("authorization");
-  if (authorization) {
-    headers.set("authorization", authorization);
+  const contentType = request.headers.get("content-type");
+  if (contentType) {
+    headers.set("content-type", contentType);
   }
   return headers;
 };
@@ -30,20 +30,22 @@ const respond = (body: unknown, status: number): NextResponse => {
 };
 
 const mockResponse = (): NextResponse =>
-  NextResponse.json({ items: [], page: 0, size: 10, total: 0 });
+  NextResponse.json({ userId: 0, username: "demo" });
 
-export const GET = async (request: Request): Promise<NextResponse> => {
+export const POST = async (request: Request): Promise<NextResponse> => {
   if (env.backendUrl === "") {
     return mockResponse();
   }
 
   const targetUrl = buildTargetUrl(request.url);
   const headers = forwardHeaders(request);
+  const body = await request.text();
 
   try {
     const data = await fetcher<unknown>(targetUrl, {
-      method: "GET",
+      method: "POST",
       headers,
+      body,
     });
     return respond(data, 200);
   } catch (error) {

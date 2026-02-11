@@ -1,14 +1,19 @@
 ﻿// Hook to orchestrate save, consent, and recommendation flow.
 import { useMutation } from "@tanstack/react-query";
 
-import { createUserConsent, saveUserCreditLv2, saveUserCreditLv3, saveUserProfile } from "@/api/userApi";
+import {
+  createUserConsent,
+  saveUserCreditLv1,
+  saveUserCreditLv2,
+  saveUserCreditLv3,
+  saveUserProfile,
+} from "@/api/userApi";
 import { executeRecommendation } from "@/api/recommendApi";
 import type {
   UserConsentLevel,
   UserInputPayload,
   UserInputLv2,
   UserInputLv3,
-  UserCreditLv3Payload,
 } from "@/types/user";
 import type { RecommendExecuteResponse } from "@/types/recommend";
 
@@ -30,13 +35,23 @@ const hasLv2Input = (payload: UserInputLv2): boolean =>
 
 const hasLv3Input = (payload: UserInputLv3): boolean =>
   hasValue(payload.loanPurpose ?? null) ||
-  hasValue(payload.totalDebt ?? null) ||
+  hasValue(payload.totalDebtAmount ?? null) ||
   hasValue(payload.existingLoanCount ?? null);
+
+const getInputLevel = (hasLv2: boolean, hasLv3: boolean): number => {
+  if (hasLv3) {
+    return 3;
+  }
+  if (hasLv2) {
+    return 2;
+  }
+  return 1;
+};
 
 const buildPayload = (values: UserInputPayload): UserInputPayload => ({
   lv1: {
     age: values.lv1.age ?? null,
-    incomeYear: values.lv1.incomeYear ?? null,
+    annualIncome: values.lv1.annualIncome ?? null,
     gender: values.lv1.gender ?? null,
   },
   lv2: {
@@ -45,7 +60,7 @@ const buildPayload = (values: UserInputPayload): UserInputPayload => ({
   },
   lv3: {
     loanPurpose: emptyToNull(values.lv3.loanPurpose ?? ""),
-    totalDebt: values.lv3.totalDebt ?? null,
+    totalDebtAmount: values.lv3.totalDebtAmount ?? null,
     existingLoanCount: values.lv3.existingLoanCount ?? null,
     consent: values.lv3.consent,
   },
@@ -59,41 +74,50 @@ export const useRecommendFlow = () =>
       const hasLv2 = hasLv2Input(payload.lv2);
       const hasLv3 = hasLv3Input(payload.lv3);
       const hasConsent = payload.lv3.consent === true;
+      const inputLevel = getInputLevel(hasLv2, hasLv3);
 
       const profileResponse = await saveUserProfile({
-        profilePayload: payload.lv1,
+        inputLevel,
+        age: payload.lv1.age,
+        incomeYear: payload.lv1.annualIncome,
+        gender: payload.lv1.gender,
+        employmentType: hasLv2 ? payload.lv2.employmentType : null,
+        residenceType: hasLv2 ? payload.lv2.residenceType : null,
+        debtTotal: hasLv3 ? payload.lv3.totalDebtAmount : null,
+        existingLoanCount: hasLv3 ? payload.lv3.existingLoanCount : null,
+        loanPurpose: hasLv3 ? payload.lv3.loanPurpose : null,
       });
 
-      let consentId: string | null = null;
       let lv2VersionId: string | undefined;
       let lv3VersionId: string | undefined;
 
+      await saveUserCreditLv1({
+        age: payload.lv1.age,
+        incomeYear: payload.lv1.annualIncome,
+        gender: payload.lv1.gender,
+      });
+
       if (hasConsent && (hasLv2 || hasLv3)) {
-        const consentLevel: UserConsentLevel = hasLv2 ? "LV2" : "LV3";
-        const consentResponse = await createUserConsent({
-          level: consentLevel,
-          purposeTags: ["loan-recommendation"],
+        const consentLevel: UserConsentLevel = hasLv2 ? 2 : 3;
+        await createUserConsent({
+          consentLevel,
+          consentGiven: true,
         });
-        consentId = consentResponse.consentId;
       }
 
-      if (hasLv2 && consentId) {
+      if (hasLv2) {
         const lv2Response = await saveUserCreditLv2({
-          lv2Payload: payload.lv2,
-          consentId,
+          employmentType: payload.lv2.employmentType,
+          residenceType: payload.lv2.residenceType,
         });
         lv2VersionId = lv2Response.lv2VersionId;
       }
 
       if (hasLv3) {
-        const lv3Payload: UserCreditLv3Payload = {
-          loanPurpose: payload.lv3.loanPurpose,
-          totalDebt: payload.lv3.totalDebt,
-          existingLoanCount: payload.lv3.existingLoanCount,
-        };
         const lv3Response = await saveUserCreditLv3({
-          lv3Payload,
-          sourceType: "USER_INPUT",
+          loanPurpose: payload.lv3.loanPurpose,
+          totalDebt: payload.lv3.totalDebtAmount,
+          existingLoanCount: payload.lv3.existingLoanCount,
         });
         lv3VersionId = lv3Response.lv3VersionId;
       }

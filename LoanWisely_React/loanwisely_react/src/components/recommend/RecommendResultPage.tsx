@@ -1,7 +1,7 @@
 ﻿"use client";
 // Recommendation result UI.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import AppHeader from "@/components/common/AppHeader";
@@ -13,6 +13,7 @@ import RiskSection from "@/components/recommend/sections/RiskSection";
 import SimulationSection from "@/components/recommend/sections/SimulationSection";
 import SummarySection from "@/components/recommend/sections/SummarySection";
 
+import { getAccessToken } from "@/infra/auth";
 import { useRecommendResult } from "@/hooks/useRecommendResult";
 import { useRecommendationList } from "@/hooks/useRecommendationList";
 import { useRecommendationExplain } from "@/hooks/useRecommendationExplain";
@@ -34,7 +35,16 @@ const RecommendResultPage = () => {
   const searchParams = useSearchParams();
   const recommendationId = searchParams.get("id");
   const { data, isLoading } = useRecommendResult(recommendationId);
-  const { data: listData } = useRecommendationList();
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    setAccessToken(getAccessToken());
+  }, []);
+
+  const { data: listData } = useRecommendationList(0, 10, Boolean(accessToken));
   const { data: explainData } = useRecommendationExplain(recommendationId);
 
   const explain = explainData ?? data?.explain ?? {

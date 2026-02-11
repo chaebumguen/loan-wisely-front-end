@@ -1,4 +1,3 @@
-// Recommendation list proxy.
 import { NextResponse } from "next/server";
 
 import { env } from "@/infra/env";
@@ -29,12 +28,9 @@ const respond = (body: unknown, status: number): NextResponse => {
   return NextResponse.json(body, { status });
 };
 
-const mockResponse = (): NextResponse =>
-  NextResponse.json({ items: [], page: 0, size: 10, total: 0 });
-
-export const GET = async (request: Request): Promise<NextResponse> => {
+export const POST = async (request: Request): Promise<NextResponse> => {
   if (env.backendUrl === "") {
-    return mockResponse();
+    return NextResponse.json({ ok: true });
   }
 
   const targetUrl = buildTargetUrl(request.url);
@@ -42,7 +38,7 @@ export const GET = async (request: Request): Promise<NextResponse> => {
 
   try {
     const data = await fetcher<unknown>(targetUrl, {
-      method: "GET",
+      method: "POST",
       headers,
     });
     return respond(data, 200);
