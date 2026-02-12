@@ -10,12 +10,26 @@ type ProductGridSectionProps = {
   onShowAll: () => void;
 };
 
-const splitReasons = (reason: string): string[] =>
-  reason
+const splitReasons = (reason: string): string[] => {
+  const ignorePatterns = [/^score\s*=/i, /^rateMin\s*=/i, /^rateMax\s*=/i];
+  return reason
     .split(/[,/]/)
     .map((item) => item.trim())
-    .filter(Boolean)
+    .filter((item) => item.length > 0 && !ignorePatterns.some((pattern) => pattern.test(item)))
     .slice(0, 3);
+};
+
+const dedupeTags = (tags: string[]): string[] => {
+  const seen = new Set<string>();
+  return tags.filter((tag) => {
+    const normalized = tag.trim();
+    if (!normalized || seen.has(normalized)) {
+      return false;
+    }
+    seen.add(normalized);
+    return true;
+  });
+};
 
 const ProductGridSection = ({
   products,
@@ -29,12 +43,13 @@ const ProductGridSection = ({
     <div className="grid gap-4">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {visibleProducts.map((product) => {
-          const tags = splitReasons(product.reason);
+          const tags = dedupeTags(splitReasons(product.reason));
+          const fallback = dedupeTags(fallbackTags);
           return (
             <ProductCard
               key={product.id}
               {...product}
-              tags={tags.length > 0 ? tags : fallbackTags}
+              tags={tags.length > 0 ? tags : fallback}
             />
           );
         })}

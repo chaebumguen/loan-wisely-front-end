@@ -18,6 +18,7 @@ const LevelThreeFields = ({ register }: LevelThreeFieldsProps) => (
         <option value="">선택하세요</option>
         <option value="living">생활자금</option>
         <option value="housing">주택자금</option>
+        <option value="rent">전세/월세자금</option>
         <option value="business">사업자금</option>
       </select>
     </label>

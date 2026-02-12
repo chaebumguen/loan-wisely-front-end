@@ -31,7 +31,7 @@ const splitSummary = (summary: string): string[] => {
 };
 
 const RecommendResultPage = () => {
-  const [showAllProducts, setShowAllProducts] = useState(false);
+  const [showAllProducts, setShowAllProducts] = useState(true);
   const [listPage, setListPage] = useState(0);
   const listSize = 5;
   const searchParams = useSearchParams();
@@ -115,6 +115,13 @@ const RecommendResultPage = () => {
     monthlyPaymentExample: "월 상환액 예시가 표시됩니다.",
     riskWarning: "고위험 조건 경고 및 승인 보장 아님 고지가 표시됩니다.",
   };
+  const purposeMismatchMessage = "대출 목적이 정책상 허용되지 않습니다.";
+  const eligibleProducts = products.filter(
+    (product) => !product.reason?.includes(purposeMismatchMessage),
+  );
+  const excludedProducts = products.filter((product) =>
+    product.reason?.includes(purposeMismatchMessage),
+  );
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-stone-100 via-stone-100 to-amber-50 px-16 py-14">
@@ -140,12 +147,29 @@ const RecommendResultPage = () => {
 
           <SimulationSection monthlyPaymentExample={detail.monthlyPaymentExample} />
 
-          <ProductGridSection
-            products={products}
-            fallbackTags={reasons}
-            showAll={showAllProducts}
-            onShowAll={() => setShowAllProducts(true)}
-          />
+          <div className="grid gap-4">
+            <h3 className="text-lg font-semibold text-stone-900">추천 상품</h3>
+            <ProductGridSection
+              products={eligibleProducts}
+              fallbackTags={reasons}
+              showAll={showAllProducts}
+              onShowAll={() => setShowAllProducts(true)}
+            />
+          </div>
+
+          {excludedProducts.length > 0 && (
+            <div className="grid gap-4">
+              <h3 className="text-lg font-semibold text-stone-900">
+                목적 불일치 및 제외 상품
+              </h3>
+              <ProductGridSection
+                products={excludedProducts}
+                fallbackTags={[purposeMismatchMessage]}
+                showAll={true}
+                onShowAll={() => {}}
+              />
+            </div>
+          )}
 
           <RiskSection riskNotes={riskNotes} fallbackNote={detail.riskWarning} />
 
