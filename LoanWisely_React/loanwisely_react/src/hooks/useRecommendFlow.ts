@@ -20,6 +20,13 @@ import type { RecommendExecuteResponse } from "@/types/recommend";
 const emptyToNull = (value: string): string | null =>
   value.trim() === "" ? null : value;
 
+const toWon = (value: number | null | undefined): number | null => {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return null;
+  }
+  return Math.round(value * 10000);
+};
+
 const hasValue = (value: string | number | null): boolean => {
   if (typeof value === "number") {
     return Number.isFinite(value);
@@ -51,7 +58,7 @@ const getInputLevel = (hasLv2: boolean, hasLv3: boolean): number => {
 const buildPayload = (values: UserInputPayload): UserInputPayload => ({
   lv1: {
     age: values.lv1.age ?? null,
-    annualIncome: values.lv1.annualIncome ?? null,
+    annualIncome: toWon(values.lv1.annualIncome ?? null),
     gender: values.lv1.gender ?? null,
   },
   lv2: {
@@ -60,7 +67,7 @@ const buildPayload = (values: UserInputPayload): UserInputPayload => ({
   },
   lv3: {
     loanPurpose: emptyToNull(values.lv3.loanPurpose ?? ""),
-    totalDebtAmount: values.lv3.totalDebtAmount ?? null,
+    totalDebtAmount: toWon(values.lv3.totalDebtAmount ?? null),
     existingLoanCount: values.lv3.existingLoanCount ?? null,
     consent: values.lv3.consent,
   },

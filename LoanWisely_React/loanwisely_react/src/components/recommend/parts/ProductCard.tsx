@@ -23,17 +23,28 @@ const formatNumber = (value: number | null | undefined): string => {
   return value.toFixed(2);
 };
 
+const formatRateNumber = (value: number | null | undefined): string => {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return "-";
+  }
+  if (value <= 0) {
+    return "";
+  }
+  return value.toFixed(2);
+};
+
 const formatRateText = (value: string): string => {
   if (!value) {
     return "-";
   }
-  return value.replace(/(\d+(\.\d+)?)/g, (match) => {
+  const replaced = value.replace(/-?\d+(\.\d+)?/g, (match) => {
     const parsed = Number(match);
     if (Number.isNaN(parsed)) {
       return match;
     }
-    return parsed.toFixed(2);
+    return formatRateNumber(parsed);
   });
+  return replaced.replace(/\s+/g, " ").trim();
 };
 
 const formatLimitValue = (raw: string): string => {
@@ -64,6 +75,11 @@ const translateFactorName = (name: string, code: string): string => {
     "Matching Score": "적합도",
   };
   return map[normalized] ?? normalized;
+};
+
+const isRateDetail = (name: string, code: string): boolean => {
+  const target = `${name} ${code}`.toLowerCase();
+  return target.includes("rate") || target.includes("금리");
 };
 
 const normalizeLenderName = (value: string): string => {
@@ -132,6 +148,8 @@ const ProductCard = ({
                   <span className="font-semibold text-stone-700">
                     {detail.factorCode?.toUpperCase().includes("LIMIT")
                       ? formatLimitValue(detail.factorValue)
+                      : isRateDetail(detail.factorName ?? "", detail.factorCode ?? "")
+                      ? formatRateNumber(Number(detail.factorValue))
                       : formatNumber(Number(detail.factorValue))}
                   </span>
                 </div>

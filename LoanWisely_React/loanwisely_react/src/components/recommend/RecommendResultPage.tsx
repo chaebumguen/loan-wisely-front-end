@@ -30,8 +30,9 @@ const splitSummary = (summary: string): string[] => {
 
 const RecommendResultPage = () => {
   const [showAllProducts, setShowAllProducts] = useState(true);
+  const [showExcludedProducts, setShowExcludedProducts] = useState(false);
   const [listPage, setListPage] = useState(0);
-  const listSize = 5;
+  const listSize = 2;
   const searchParams = useSearchParams();
   const recommendationId = searchParams.get("id");
   const { data, isLoading } = useRecommendResult(recommendationId);
@@ -113,6 +114,8 @@ const RecommendResultPage = () => {
     riskWarning: "고위험 조건 경고 및 승인 보장 아님 고지가 표시됩니다.",
   };
   const purposeMismatchMessage = "대출 목적이 정책상 허용되지 않습니다.";
+  const dsrTooHighMessage = "DSR가 기준을 초과했습니다.";
+  const exclusionMessages = [purposeMismatchMessage, dsrTooHighMessage];
   const normalizeReason = (value?: string | null): string => {
     if (!value) return "";
     return value
@@ -120,13 +123,28 @@ const RecommendResultPage = () => {
       .replace(/\s+/g, "")
       .trim();
   };
-  const normalizedPurposeMismatch = normalizeReason(purposeMismatchMessage);
-  const hasPurposeMismatch = (reason?: string | null): boolean =>
-    normalizeReason(reason).includes(normalizedPurposeMismatch);
-  const eligibleProducts = products.filter((product) => !hasPurposeMismatch(product.reason));
-  const excludedProducts = products.filter((product) => hasPurposeMismatch(product.reason));
+  const normalizedExclusionMessages = exclusionMessages.map((msg) =>
+    normalizeReason(msg),
+  );
+  const hasExclusionReason = (reason?: string | null): boolean => {
+    const normalized = normalizeReason(reason);
+    if (!normalized) return false;
+    if (normalizedExclusionMessages.some((msg) => normalized.includes(msg))) {
+      return true;
+    }
+    return normalized.includes("dsr") || normalized.includes("정책상");
+  };
+  const eligibleProducts = products.filter(
+    (product) => !hasExclusionReason(product.reason),
+  );
+  const excludedProducts = products.filter((product) =>
+    hasExclusionReason(product.reason),
+  );
   const eligibleFallbackTags = reasons.filter(
-    (reason) => reason !== purposeMismatchMessage,
+    (reason) => !exclusionMessages.includes(reason),
+  );
+  const excludedFallbackTags = reasons.filter((reason) =>
+    exclusionMessages.includes(reason),
   );
 
   return (
@@ -136,16 +154,6 @@ const RecommendResultPage = () => {
 
         <section className="flex flex-col gap-6 rounded-[32px] border border-stone-200 bg-white/90 p-8 shadow-soft-lg">
           <RecommendHeroSection hasId={Boolean(recommendationId)} isLoading={isLoading} />
-
-          <RecommendationListSection
-            items={listData?.items ?? []}
-            page={listData?.page ?? listPage}
-            size={listData?.size ?? listSize}
-            total={listData?.total ?? 0}
-            onPageChange={setListPage}
-          />
-
-          <SimulationSection monthlyPaymentExample={detail.monthlyPaymentExample} />
 
           <div className="grid gap-4">
             <h3 className="text-lg font-semibold text-stone-900">추천 상품</h3>
@@ -157,19 +165,52 @@ const RecommendResultPage = () => {
             />
           </div>
 
-          {excludedProducts.length > 0 && (
-            <div className="grid gap-4">
+          <div className="grid gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-lg font-semibold text-stone-900">
                 목적 불일치 및 제외 상품
               </h3>
-              <ProductGridSection
-                products={excludedProducts}
-                fallbackTags={[purposeMismatchMessage]}
-                showAll={true}
-                onShowAll={() => {}}
-              />
+              <button
+                type="button"
+                onClick={() => setShowExcludedProducts((prev) => !prev)}
+                className="rounded-full border border-stone-200 px-4 py-2 text-xs font-semibold text-stone-700"
+              >
+                {showExcludedProducts ? "대출 제외 상품 닫기" : "대출 제외 상품 보기"}
+              </button>
             </div>
-          )}
+            {showExcludedProducts ? (
+              excludedProducts.length > 0 ? (
+                <ProductGridSection
+                  products={excludedProducts}
+                  fallbackTags={
+                    excludedFallbackTags.length > 0
+                      ? excludedFallbackTags
+                      : exclusionMessages
+                  }
+                  showAll={true}
+                  onShowAll={() => {}}
+                />
+              ) : (
+                <div className="rounded-2xl border border-stone-200 bg-white px-6 py-8 text-center text-sm text-stone-500">
+                  제외된 상품이 없습니다.
+                </div>
+              )
+            ) : (
+              <div className="rounded-2xl border border-dashed border-stone-200 bg-stone-50 px-6 py-6 text-center text-xs text-stone-500">
+                제외된 상품을 보려면 버튼을 눌러주세요.
+              </div>
+            )}
+          </div>
+
+          <SimulationSection monthlyPaymentExample={detail.monthlyPaymentExample} />
+
+          <RecommendationListSection
+            items={listData?.items ?? []}
+            page={listData?.page ?? listPage}
+            size={listData?.size ?? listSize}
+            total={listData?.total ?? 0}
+            onPageChange={setListPage}
+          />
 
           <ActionSection />
         </section>

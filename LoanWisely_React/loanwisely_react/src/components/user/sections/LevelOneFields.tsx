@@ -19,10 +19,10 @@ const LevelOneFields = ({ register }: LevelOneFieldsProps) => (
       />
     </label>
     <label className="grid gap-2 text-sm text-stone-700">
-      연소득
+      연소득 (만원)
       <input
         type="number"
-        placeholder="연소득을 입력하세요"
+        placeholder="연소득을 만원 단위로 입력하세요"
         className="rounded-2xl border border-stone-300 px-4 py-2"
         {...register("annualIncome", { valueAsNumber: true })}
       />

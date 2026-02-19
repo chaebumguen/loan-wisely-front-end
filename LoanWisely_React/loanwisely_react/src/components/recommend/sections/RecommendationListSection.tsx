@@ -19,6 +19,30 @@ type RecommendationListSectionProps = {
   onPageChange: (page: number) => void;
 };
 
+const formatRecommendationTitle = (title: string): string => {
+  if (!title) {
+    return "추천 이력";
+  }
+  return title.replace(/^Recommendation\s*/i, "추천 이력 ");
+};
+
+const formatRateText = (value: string): string => {
+  if (!value) {
+    return "-";
+  }
+  const replaced = value.replace(/-?\d+(\.\d+)?/g, (match) => {
+    const parsed = Number(match);
+    if (Number.isNaN(parsed)) {
+      return match;
+    }
+    if (parsed <= 0) {
+      return "";
+    }
+    return parsed.toFixed(2);
+  });
+  return replaced.replace(/\s+/g, " ").trim();
+};
+
 const RecommendationListSection = ({
   items,
   page,
@@ -53,7 +77,9 @@ const RecommendationListSection = ({
                 href={`/recommend?id=${item.id}`}
                 className="flex items-center justify-between"
               >
-                <span className="text-stone-800">{item.title}</span>
+                <span className="text-stone-800">
+                  {formatRecommendationTitle(item.title)}
+                </span>
                 <span className="text-xs text-stone-400">{item.createdAt}</span>
               </a>
               <div className="mt-3 space-y-2 text-xs text-stone-600">
@@ -66,7 +92,7 @@ const RecommendationListSection = ({
                       className="flex flex-wrap items-center gap-2 rounded-xl border border-stone-200 bg-white px-3 py-2"
                     >
                       <span className="font-medium text-stone-700">{product.productName}</span>
-                      <span>금리: {product.rate}</span>
+                      <span>금리: {formatRateText(product.rate)}</span>
                       <span>한도: {product.limit}</span>
                       <span>상환방법: {product.repaymentMethod}</span>
                     </div>

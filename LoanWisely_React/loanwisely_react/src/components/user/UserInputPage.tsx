@@ -63,6 +63,12 @@ const UserInputPage = () => {
     }
 
     const values = getValues();
+    if (!values.consent) {
+      if (typeof window !== "undefined") {
+        window.alert("금융정보 이용에 동의해야 추천 결과를 확인할 수 있습니다.");
+      }
+      return;
+    }
     const payload: UserInputPayload = {
       lv1: {
         age: values.age ?? null,

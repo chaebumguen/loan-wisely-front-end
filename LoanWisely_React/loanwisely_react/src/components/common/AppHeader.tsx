@@ -78,7 +78,7 @@ const AppHeader = ({ variant = "default" }: AppHeaderProps) => {
             LOAN WISELY
           </div>
           <div className="text-xs text-stone-500 sm:text-sm">
-            Personalized Loan Recommendation Service
+            당신의 현명한 대출 파트너
           </div>
         </div>
       </a>
