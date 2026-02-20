@@ -31,6 +31,8 @@ const splitSummary = (summary: string): string[] => {
 const RecommendResultPage = () => {
   const [showAllProducts, setShowAllProducts] = useState(true);
   const [showExcludedProducts, setShowExcludedProducts] = useState(false);
+  const [eligiblePage, setEligiblePage] = useState(1);
+  const [excludedPage, setExcludedPage] = useState(1);
   const [listPage, setListPage] = useState(0);
   const listSize = 2;
   const searchParams = useSearchParams();
@@ -115,7 +117,8 @@ const RecommendResultPage = () => {
   };
   const purposeMismatchMessage = "대출 목적이 정책상 허용되지 않습니다.";
   const dsrTooHighMessage = "DSR가 기준을 초과했습니다.";
-  const exclusionMessages = [purposeMismatchMessage, dsrTooHighMessage];
+  const notEligibleMessage = "추천 대상이 아닙니다.";
+  const exclusionMessages = [purposeMismatchMessage, dsrTooHighMessage, notEligibleMessage];
   const normalizeReason = (value?: string | null): string => {
     if (!value) return "";
     return value
@@ -146,6 +149,21 @@ const RecommendResultPage = () => {
   const excludedFallbackTags = reasons.filter((reason) =>
     exclusionMessages.includes(reason),
   );
+  const productPageSize = 9;
+  const eligibleTotalPages = Math.max(1, Math.ceil(eligibleProducts.length / productPageSize));
+  const excludedTotalPages = Math.max(1, Math.ceil(excludedProducts.length / productPageSize));
+  const eligibleCurrentPage = Math.min(eligiblePage, eligibleTotalPages);
+  const excludedCurrentPage = Math.min(excludedPage, excludedTotalPages);
+  const eligibleSlice = eligibleProducts.slice(
+    (eligibleCurrentPage - 1) * productPageSize,
+    eligibleCurrentPage * productPageSize,
+  );
+  const excludedSlice = excludedProducts.slice(
+    (excludedCurrentPage - 1) * productPageSize,
+    excludedCurrentPage * productPageSize,
+  );
+  const eligiblePages = Array.from({ length: eligibleTotalPages }, (_, i) => i + 1);
+  const excludedPages = Array.from({ length: excludedTotalPages }, (_, i) => i + 1);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-stone-100 via-stone-100 to-amber-50 px-16 py-14">
@@ -158,11 +176,52 @@ const RecommendResultPage = () => {
           <div className="grid gap-4">
             <h3 className="text-lg font-semibold text-stone-900">추천 상품</h3>
             <ProductGridSection
-              products={eligibleProducts}
+              products={eligibleSlice}
               fallbackTags={eligibleFallbackTags}
               showAll={showAllProducts}
               onShowAll={() => setShowAllProducts(true)}
             />
+            {eligibleProducts.length > productPageSize && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-xs text-stone-500">
+                <span>
+                  총 {eligibleProducts.length}개 · {eligibleCurrentPage} / {eligibleTotalPages} 페이지
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEligiblePage((prev) => Math.max(1, prev - 1))}
+                    disabled={eligibleCurrentPage === 1}
+                    className="rounded-full border border-stone-200 px-3 py-1 disabled:opacity-40"
+                  >
+                    이전
+                  </button>
+                  {eligiblePages.map((pageNumber) => (
+                    <button
+                      key={`eligible-page-${pageNumber}`}
+                      type="button"
+                      onClick={() => setEligiblePage(pageNumber)}
+                      className={
+                        pageNumber === eligibleCurrentPage
+                          ? "rounded-full bg-stone-900 px-3 py-1 text-white"
+                          : "rounded-full border border-stone-200 px-3 py-1"
+                      }
+                    >
+                      {pageNumber}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEligiblePage((prev) => Math.min(eligibleTotalPages, prev + 1))
+                    }
+                    disabled={eligibleCurrentPage === eligibleTotalPages}
+                    className="rounded-full border border-stone-200 px-3 py-1 disabled:opacity-40"
+                  >
+                    다음
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid gap-4">
@@ -180,16 +239,59 @@ const RecommendResultPage = () => {
             </div>
             {showExcludedProducts ? (
               excludedProducts.length > 0 ? (
-                <ProductGridSection
-                  products={excludedProducts}
-                  fallbackTags={
-                    excludedFallbackTags.length > 0
-                      ? excludedFallbackTags
-                      : exclusionMessages
-                  }
-                  showAll={true}
-                  onShowAll={() => {}}
-                />
+                <>
+                  <ProductGridSection
+                    products={excludedSlice}
+                    fallbackTags={
+                      excludedFallbackTags.length > 0
+                        ? excludedFallbackTags
+                        : exclusionMessages
+                    }
+                    showAll={true}
+                    onShowAll={() => {}}
+                  />
+                  {excludedProducts.length > productPageSize && (
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-xs text-stone-500">
+                      <span>
+                        총 {excludedProducts.length}개 · {excludedCurrentPage} / {excludedTotalPages} 페이지
+                      </span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setExcludedPage((prev) => Math.max(1, prev - 1))}
+                          disabled={excludedCurrentPage === 1}
+                          className="rounded-full border border-stone-200 px-3 py-1 disabled:opacity-40"
+                        >
+                          이전
+                        </button>
+                        {excludedPages.map((pageNumber) => (
+                          <button
+                            key={`excluded-page-${pageNumber}`}
+                            type="button"
+                            onClick={() => setExcludedPage(pageNumber)}
+                            className={
+                              pageNumber === excludedCurrentPage
+                                ? "rounded-full bg-stone-900 px-3 py-1 text-white"
+                                : "rounded-full border border-stone-200 px-3 py-1"
+                            }
+                          >
+                            {pageNumber}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExcludedPage((prev) => Math.min(excludedTotalPages, prev + 1))
+                          }
+                          disabled={excludedCurrentPage === excludedTotalPages}
+                          className="rounded-full border border-stone-200 px-3 py-1 disabled:opacity-40"
+                        >
+                          다음
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="rounded-2xl border border-stone-200 bg-white px-6 py-8 text-center text-sm text-stone-500">
                   제외된 상품이 없습니다.

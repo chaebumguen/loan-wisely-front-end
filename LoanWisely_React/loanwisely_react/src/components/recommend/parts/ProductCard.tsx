@@ -1,4 +1,8 @@
-﻿// 추천 상품 카드
+// 추천 상품 카드
+"use client";
+
+import { useState } from "react";
+
 export type ProductCardProps = {
   id: string;
   lenderName: string;
@@ -8,6 +12,7 @@ export type ProductCardProps = {
   reason: string;
   suitabilityScore: number;
   tags: string[];
+  providerUrl?: string;
   estimationDetails?: {
     factorCode: string;
     factorName: string;
@@ -99,8 +104,10 @@ const ProductCard = ({
   reason,
   suitabilityScore,
   tags,
+  providerUrl,
   estimationDetails = [],
 }: ProductCardProps) => {
+  const [open, setOpen] = useState(false);
   const formattedRate = formatRateText(rate);
   const formattedLimit = /^[\d,.\s]+$/.test(limit.trim())
     ? `한도 ${formatLimitValue(limit)}`
@@ -116,15 +123,64 @@ const ProductCard = ({
           <div className="mt-2 text-sm text-stone-600">{formattedRate}</div>
           <div className="text-sm text-stone-600">{formattedLimit}</div>
         </div>
-        <button
-          type="button"
-          className="h-10 rounded-full border border-stone-400 px-4 text-sm font-semibold text-stone-700"
-        >
-          상세 보기
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setOpen((prev) => !prev)}
+            className="h-10 min-w-[84px] whitespace-nowrap rounded-full border border-stone-400 px-4 text-sm font-semibold text-stone-700"
+          >
+            상세 보기
+          </button>
+          {open ? (
+            <div
+              className="absolute right-0 top-12 z-10 w-64 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-xs text-stone-700 shadow-lg"
+              role="dialog"
+            >
+              <div className="absolute -top-2 right-6 h-4 w-4 rotate-45 border border-stone-200 bg-white" />
+              <div className="space-y-2">
+                <div className="text-[11px] text-stone-500">대출상품</div>
+                <div className="text-sm font-semibold text-stone-900">{productName}</div>
+                <div className="mt-1 text-[11px] text-stone-500">은행명</div>
+                <div className="text-sm text-stone-800">{lenderLabel}</div>
+                {providerUrl ? (
+                  <a
+                    href={providerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block break-all text-xs text-stone-700 underline underline-offset-2"
+                  >
+                    {providerUrl}
+                  </a>
+                ) : (
+                  <div className="text-xs text-stone-400">등록된 URL이 없습니다.</div>
+                )}
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  {providerUrl ? (
+                    <a
+                      href={providerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full border border-stone-300 px-3 py-1 text-[11px] text-stone-700"
+                    >
+                      사이트 열기
+                    </a>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    className="rounded-full border border-stone-200 px-3 py-1 text-[11px] text-stone-500"
+                  >
+                    닫기
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
       </div>
       <div className="mt-4 text-sm text-stone-600">
-        <span className="font-semibold text-stone-800">적합도:</span> {formatNumber(suitabilityScore)}점
+        <span className="font-semibold text-stone-800">적합도:</span>{" "}
+        {formatNumber(suitabilityScore)}점
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         {tags.map((tag) => (
@@ -143,7 +199,10 @@ const ProductCard = ({
             {estimationDetails
               .filter((detail) => detail.factorCode?.toUpperCase() !== "SCORE")
               .map((detail) => (
-                <div key={`${id}-${detail.factorCode}-${detail.factorValue}`} className="flex justify-between gap-3">
+                <div
+                  key={`${id}-${detail.factorCode}-${detail.factorValue}`}
+                  className="flex justify-between gap-3"
+                >
                   <span>{translateFactorName(detail.factorName, detail.factorCode)}</span>
                   <span className="font-semibold text-stone-700">
                     {detail.factorCode?.toUpperCase().includes("LIMIT")

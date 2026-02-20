@@ -16,6 +16,7 @@ export type RecommendProduct = {
   reason: string;
   suitabilityScore: number;
   riskNote: string;
+  providerUrl?: string;
   estimationDetails?: RecommendEstimationDetail[];
 };
 
