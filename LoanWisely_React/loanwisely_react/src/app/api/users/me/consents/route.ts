@@ -37,7 +37,10 @@ const respond = (body: unknown, status: number): NextResponse => {
 
 export const POST = async (request: Request): Promise<NextResponse> => {
   if (env.backendUrl === "") {
-    return NextResponse.json({ consentId: "demo-consent" });
+    return NextResponse.json(
+      { message: "백엔드 API 주소가 설정되지 않아 동의 정보 저장을 처리할 수 없습니다." },
+      { status: 503 },
+    );
   }
 
   const targetUrl = buildTargetUrl(request.url);
@@ -61,7 +64,10 @@ export const POST = async (request: Request): Promise<NextResponse> => {
 
 export const GET = async (request: Request): Promise<NextResponse> => {
   if (env.backendUrl === "") {
-    return NextResponse.json([]);
+    return NextResponse.json(
+      { message: "백엔드 API 주소가 설정되지 않아 동의 정보 조회를 처리할 수 없습니다." },
+      { status: 503 },
+    );
   }
 
   const targetUrl = buildTargetUrl(request.url);

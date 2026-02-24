@@ -29,12 +29,15 @@ const respond = (body: unknown, status: number): NextResponse => {
   return NextResponse.json(body, { status });
 };
 
-const mockResponse = (): NextResponse =>
-  NextResponse.json({ userId: 0, username: "demo" });
-
 export const POST = async (request: Request): Promise<NextResponse> => {
   if (env.backendUrl === "") {
-    return mockResponse();
+    return respond(
+      {
+        code: "BFF_BACKEND_NOT_CONFIGURED",
+        message: "백엔드 연결이 설정되지 않아 회원가입을 진행할 수 없습니다.",
+      },
+      503,
+    );
   }
 
   const targetUrl = buildTargetUrl(request.url);

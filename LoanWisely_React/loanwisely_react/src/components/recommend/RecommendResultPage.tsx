@@ -1,7 +1,7 @@
 "use client";
 // Recommendation result UI.
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import AppHeader from "@/components/common/AppHeader";
@@ -16,17 +16,6 @@ import { useRecommendResult } from "@/hooks/useRecommendResult";
 import { useRecommendationList } from "@/hooks/useRecommendationList";
 import { useRecommendationExplain } from "@/hooks/useRecommendationExplain";
 
-const splitSummary = (summary: string): string[] => {
-  const parts = summary.split(/[\n•]/).map((item) => item.trim()).filter(Boolean);
-  if (parts.length >= 3) {
-    return parts.slice(0, 3);
-  }
-  return [
-    summary || "입력 조건을 바탕으로 추천을 구성했습니다.",
-    "상환 여력을 고려한 상품을 우선 정렬했습니다.",
-    "리스크 항목을 함께 확인해 주세요.",
-  ];
-};
 
 const RecommendResultPage = () => {
   const [showAllProducts, setShowAllProducts] = useState(true);
@@ -38,86 +27,23 @@ const RecommendResultPage = () => {
   const searchParams = useSearchParams();
   const recommendationId = searchParams.get("id");
   const { data, isLoading } = useRecommendResult(recommendationId);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    setAccessToken(getAccessToken());
-  }, []);
+  const accessToken = getAccessToken();
 
   const { data: listData } = useRecommendationList(listPage, listSize, Boolean(accessToken));
   const { data: explainData } = useRecommendationExplain(recommendationId);
 
-  const explain = explainData ?? data?.explain ?? {
-    summary: "추천에 사용된 입력 요약이 표시됩니다.",
-    levelUsed: "LV1",
-    levelStatus: "empty",
-  };
   const reasons = explainData?.reasons ?? [];
 
-  const products = data?.products ?? [
-    {
-      id: "demo-1",
-      lenderName: "대출사명",
-      productName: "대출 상품명",
-      rate: "금리 월 6.2%",
-      limit: "최대 한도 500만원",
-      reason: "추천 사유가 표시됩니다.",
-      suitabilityScore: 78,
-      riskNote: "주의사항이 표시됩니다.",
-    },
-    {
-      id: "demo-2",
-      lenderName: "대출사명",
-      productName: "대출 상품명",
-      rate: "금리 월 6.2%",
-      limit: "최대 한도 500만원",
-      reason: "추천 사유가 표시됩니다.",
-      suitabilityScore: 72,
-      riskNote: "주의사항이 표시됩니다.",
-    },
-    {
-      id: "demo-3",
-      lenderName: "대출사명",
-      productName: "대출 상품명",
-      rate: "금리 월 6.0%",
-      limit: "최대 한도 700만원",
-      reason: "추천 사유가 표시됩니다.",
-      suitabilityScore: 69,
-      riskNote: "주의사항이 표시됩니다.",
-    },
-    {
-      id: "demo-4",
-      lenderName: "대출사명",
-      productName: "대출 상품명",
-      rate: "금리 월 5.9%",
-      limit: "최대 한도 900만원",
-      reason: "추천 사유가 표시됩니다.",
-      suitabilityScore: 65,
-      riskNote: "주의사항이 표시됩니다.",
-    },
-    {
-      id: "demo-5",
-      lenderName: "대출사명",
-      productName: "대출 상품명",
-      rate: "금리 월 6.4%",
-      limit: "최대 한도 300만원",
-      reason: "추천 사유가 표시됩니다.",
-      suitabilityScore: 61,
-      riskNote: "주의사항이 표시됩니다.",
-    },
-  ];
+  const products = data?.products ?? [];
 
   const detail = data?.detail ?? {
-    description: "상품 상세 정보가 표시됩니다.",
-    monthlyPaymentExample: "월 상환액 예시가 표시됩니다.",
-    riskWarning: "고위험 조건 경고 및 승인 보장 아님 고지가 표시됩니다.",
+    description: "??⑤㈇???筌먲퐢沅뽪뤆?쎛 ?熬곣뫗異???蹂κ텢??? ???용┃???鍮??",
+    monthlyPaymentExample: "??⑤?????????깅턄???筌먲퐢沅뽪뤆?쎛 ?熬곣뫗異???蹂κ텢??? ???용┃???鍮??",
+    riskWarning: "?洹먮봾裕?????뉖? ?筌먲퐢沅뽪뤆?쎛 ?熬곣뫗異???蹂κ텢??? ???용┃???鍮??",
   };
-  const purposeMismatchMessage = "대출 목적이 정책상 허용되지 않습니다.";
-  const dsrTooHighMessage = "DSR가 기준을 초과했습니다.";
-  const notEligibleMessage = "추천 대상이 아닙니다.";
+  const purposeMismatchMessage = "????嶺뚮ㅄ維????筌먦끉??????깅뮔??? ???용????덈펲.";
+  const dsrTooHighMessage = "DSR?띠럾? ?リ옇?????貫?????곕????덈펲.";
+  const notEligibleMessage = "?怨뺣뾼??????⑤챷逾??熬곣뫀六???덈펲.";
   const exclusionMessages = [purposeMismatchMessage, dsrTooHighMessage, notEligibleMessage];
   const normalizeReason = (value?: string | null): string => {
     if (!value) return "";
@@ -135,7 +61,7 @@ const RecommendResultPage = () => {
     if (normalizedExclusionMessages.some((msg) => normalized.includes(msg))) {
       return true;
     }
-    return normalized.includes("dsr") || normalized.includes("정책상");
+    return normalized.includes("dsr");
   };
   const eligibleProducts = products.filter(
     (product) => !hasExclusionReason(product.reason),
@@ -174,7 +100,7 @@ const RecommendResultPage = () => {
           <RecommendHeroSection hasId={Boolean(recommendationId)} isLoading={isLoading} />
 
           <div className="grid gap-4">
-            <h3 className="text-lg font-semibold text-stone-900">추천 상품</h3>
+            <h3 className="text-lg font-semibold text-stone-900">?怨뺣뾼????⑤갭?</h3>
             <ProductGridSection
               products={eligibleSlice}
               fallbackTags={eligibleFallbackTags}
@@ -184,7 +110,7 @@ const RecommendResultPage = () => {
             {eligibleProducts.length > productPageSize && (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-xs text-stone-500">
                 <span>
-                  총 {eligibleProducts.length}개 · {eligibleCurrentPage} / {eligibleTotalPages} 페이지
+                  ??{eligibleProducts.length}??鸚?{eligibleCurrentPage} / {eligibleTotalPages} ??瑜곷턄嶺뚯솘?
                 </span>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
@@ -193,7 +119,7 @@ const RecommendResultPage = () => {
                     disabled={eligibleCurrentPage === 1}
                     className="rounded-full border border-stone-200 px-3 py-1 disabled:opacity-40"
                   >
-                    이전
+                    ??怨몄쓧
                   </button>
                   {eligiblePages.map((pageNumber) => (
                     <button
@@ -217,7 +143,7 @@ const RecommendResultPage = () => {
                     disabled={eligibleCurrentPage === eligibleTotalPages}
                     className="rounded-full border border-stone-200 px-3 py-1 disabled:opacity-40"
                   >
-                    다음
+                    ???깅쾳
                   </button>
                 </div>
               </div>
@@ -227,7 +153,7 @@ const RecommendResultPage = () => {
           <div className="grid gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-lg font-semibold text-stone-900">
-                목적 불일치 및 제외 상품
+                嶺뚮ㅄ維???釉띾쐠??뉎럦?????戮곕뇶 ??⑤갭?
               </h3>
               <button
                 type="button"
@@ -253,7 +179,7 @@ const RecommendResultPage = () => {
                   {excludedProducts.length > productPageSize && (
                     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-xs text-stone-500">
                       <span>
-                        총 {excludedProducts.length}개 · {excludedCurrentPage} / {excludedTotalPages} 페이지
+                        ??{excludedProducts.length}??鸚?{excludedCurrentPage} / {excludedTotalPages} ??瑜곷턄嶺뚯솘?
                       </span>
                       <div className="flex flex-wrap items-center gap-2">
                         <button
@@ -262,7 +188,7 @@ const RecommendResultPage = () => {
                           disabled={excludedCurrentPage === 1}
                           className="rounded-full border border-stone-200 px-3 py-1 disabled:opacity-40"
                         >
-                          이전
+                          ??怨몄쓧
                         </button>
                         {excludedPages.map((pageNumber) => (
                           <button
@@ -286,7 +212,7 @@ const RecommendResultPage = () => {
                           disabled={excludedCurrentPage === excludedTotalPages}
                           className="rounded-full border border-stone-200 px-3 py-1 disabled:opacity-40"
                         >
-                          다음
+                          ???깅쾳
                         </button>
                       </div>
                     </div>
@@ -294,12 +220,12 @@ const RecommendResultPage = () => {
                 </>
               ) : (
                 <div className="rounded-2xl border border-stone-200 bg-white px-6 py-8 text-center text-sm text-stone-500">
-                  제외된 상품이 없습니다.
+                  ??戮곕뇶????⑤갭?????怨룸????덈펲.
                 </div>
               )
             ) : (
               <div className="rounded-2xl border border-dashed border-stone-200 bg-stone-50 px-6 py-6 text-center text-xs text-stone-500">
-                제외된 상품을 보려면 버튼을 눌러주세요.
+                ??戮곕뇶????⑤갭????곌랜???彛??뺢퀗????????롩썒??닔???
               </div>
             )}
           </div>

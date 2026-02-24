@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 
@@ -11,19 +12,25 @@ type AppHeaderProps = {
 };
 
 const AppHeader = ({ variant = "default" }: AppHeaderProps) => {
-  const [hasToken, setHasToken] = useState(false);
-
-  useEffect(() => {
+  const [hasToken, setHasToken] = useState(() => {
     const token = getAccessToken();
-    if (!token) {
-      setHasToken(false);
-      return;
-    }
+    if (!token) return false;
 
     const expiresAt = getAccessTokenExpiry();
     if (expiresAt !== null && Date.now() >= expiresAt) {
       clearAccessToken();
-      setHasToken(false);
+      return false;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token) return;
+
+    const expiresAt = getAccessTokenExpiry();
+    if (expiresAt !== null && Date.now() >= expiresAt) {
+      clearAccessToken();
       return;
     }
 
@@ -37,9 +44,7 @@ const AppHeader = ({ variant = "default" }: AppHeaderProps) => {
 
   const pathname = usePathname();
   const loginHref = useMemo(() => {
-    if (!pathname) {
-      return "/login";
-    }
+    if (!pathname) return "/login";
     return `/login?redirect=${encodeURIComponent(pathname)}`;
   }, [pathname]);
 
@@ -65,10 +70,10 @@ const AppHeader = ({ variant = "default" }: AppHeaderProps) => {
           : "flex flex-col items-start justify-between gap-4 rounded-[22px] border border-[var(--lw-border)] bg-white/90 px-4 py-4 shadow-[var(--lw-shadow)] sm:flex-row sm:items-center sm:gap-6 sm:px-7 sm:py-5"
       }
     >
-      <a href="/" className="flex items-center gap-4" aria-label="LoanWisely">
+      <Link href="/" className="flex items-center gap-4" aria-label="LoanWisely">
         <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#f4ecdf] shadow-sm sm:h-12 sm:w-12">
           <img
-            src="/loanie_누끼.png"
+            src="/loanie_%EB%88%84%EB%81%BC.png"
             alt="Loanie"
             className="h-7 w-7 object-contain sm:h-9 sm:w-9"
           />
@@ -81,20 +86,22 @@ const AppHeader = ({ variant = "default" }: AppHeaderProps) => {
             당신의 현명한 대출 파트너
           </div>
         </div>
-      </a>
+      </Link>
+
       {variant === "default" ? (
         <nav className="w-full sm:ml-auto sm:w-auto" aria-label="Global">
           <ul className="flex flex-wrap items-center gap-2 text-xs font-medium text-stone-700 sm:flex-nowrap sm:justify-end sm:gap-3 sm:text-sm">
             {links.map((item) => (
               <li key={item.label}>
-                <a
+                <Link
                   href={item.href}
                   className="whitespace-nowrap rounded-full border border-[var(--lw-border)] bg-white px-3 py-1.5 text-[var(--lw-ink)] transition hover:border-stone-300 hover:bg-stone-50 sm:px-4 sm:py-2"
                 >
                   {item.label}
-                </a>
+                </Link>
               </li>
             ))}
+
             <li>
               {hasToken ? (
                 <button
@@ -105,22 +112,23 @@ const AppHeader = ({ variant = "default" }: AppHeaderProps) => {
                   로그아웃
                 </button>
               ) : (
-                <a
+                <Link
                   href={loginHref}
                   className="whitespace-nowrap rounded-full border border-[var(--lw-border)] bg-white px-3 py-1.5 text-[var(--lw-ink)] transition hover:border-stone-300 hover:bg-stone-50 sm:px-4 sm:py-2"
                 >
                   로그인
-                </a>
+                </Link>
               )}
             </li>
+
             {!hasToken ? (
               <li>
-                <a
+                <Link
                   href="/signup"
                   className="whitespace-nowrap rounded-full border border-[var(--lw-border)] bg-[#f4ecdf] px-3 py-1.5 text-[var(--lw-ink)] transition hover:border-stone-300 hover:bg-[#efe5d7] sm:px-4 sm:py-2"
                 >
                   회원가입
-                </a>
+                </Link>
               </li>
             ) : null}
           </ul>
@@ -131,4 +139,3 @@ const AppHeader = ({ variant = "default" }: AppHeaderProps) => {
 };
 
 export default AppHeader;
-

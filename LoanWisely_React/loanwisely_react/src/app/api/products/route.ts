@@ -10,9 +10,6 @@ const buildTargetUrl = (requestUrl: string): string => {
   return `${base}/api/v1/products${incoming.search}`;
 };
 
-const mockResponse = (): NextResponse =>
-  NextResponse.json({ data: [], message: "No backend configured." });
-
 const forwardHeaders = (request: Request): HeadersInit => {
   const headers = new Headers();
   const authorization = request.headers.get("authorization");
@@ -36,7 +33,14 @@ const respond = (body: unknown, status: number): NextResponse => {
 
 export const GET = async (request: Request): Promise<NextResponse> => {
   if (env.backendUrl === "") {
-    return mockResponse();
+    return respond(
+      {
+        data: [],
+        code: "BFF_BACKEND_NOT_CONFIGURED",
+        message: "백엔드 연결이 설정되지 않아 상품 데이터를 불러올 수 없습니다.",
+      },
+      503,
+    );
   }
 
   const targetUrl = buildTargetUrl(request.url);

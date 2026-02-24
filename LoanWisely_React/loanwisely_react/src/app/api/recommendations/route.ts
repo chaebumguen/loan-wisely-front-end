@@ -10,9 +10,6 @@ const buildTargetUrl = (requestUrl: string): string => {
   return `${base}${incoming.pathname}${incoming.search}`;
 };
 
-const mockResponse = (): NextResponse =>
-  NextResponse.json({ recommendationId: "demo-reco" });
-
 const forwardHeaders = (request: Request): HeadersInit => {
   const headers = new Headers();
   const contentType = request.headers.get("content-type");
@@ -40,7 +37,13 @@ const respond = (body: unknown, status: number): NextResponse => {
 
 export const POST = async (request: Request): Promise<NextResponse> => {
   if (env.backendUrl === "") {
-    return mockResponse();
+    return respond(
+      {
+        code: "BFF_BACKEND_NOT_CONFIGURED",
+        message: "백엔드 연결이 설정되지 않았습니다. 추천 결과를 생성할 수 없습니다.",
+      },
+      503,
+    );
   }
 
   const targetUrl = buildTargetUrl(request.url);

@@ -1,10 +1,25 @@
-// LV3 입력 필드
+import type { FormEvent, KeyboardEvent } from "react";
 import type { UseFormRegister } from "react-hook-form";
 
 import type { FormValues } from "@/components/user/types";
 
 type LevelThreeFieldsProps = {
   register: UseFormRegister<FormValues>;
+};
+
+const BLOCKED_NUMBER_KEYS = new Set(["-", "+", "e", "E", "."]);
+
+const handleNumberKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  if (BLOCKED_NUMBER_KEYS.has(event.key)) {
+    event.preventDefault();
+  }
+};
+
+const handleNumberInput = (event: FormEvent<HTMLInputElement>) => {
+  const sanitized = event.currentTarget.value.replace(/[^0-9]/g, "");
+  if (event.currentTarget.value !== sanitized) {
+    event.currentTarget.value = sanitized;
+  }
 };
 
 const LevelThreeFields = ({ register }: LevelThreeFieldsProps) => (
@@ -26,8 +41,12 @@ const LevelThreeFields = ({ register }: LevelThreeFieldsProps) => (
       총 부채 (만원)
       <input
         type="number"
-        placeholder="총 부채 금액을 만원 단위로 입력하세요"
+        placeholder="총 부채 금액을 만원 단위로 입력하세요 (숫자만 입력 가능합니다)"
         className="rounded-2xl border border-stone-300 px-4 py-2"
+        min={0}
+        step={1}
+        onKeyDown={handleNumberKeyDown}
+        onInput={handleNumberInput}
         {...register("totalDebtAmount", { valueAsNumber: true })}
       />
     </label>
@@ -35,8 +54,12 @@ const LevelThreeFields = ({ register }: LevelThreeFieldsProps) => (
       기존 대출 건수
       <input
         type="number"
-        placeholder="기존 대출 건수를 입력하세요"
+        placeholder="기존 대출 건수를 입력하세요 (숫자만 입력 가능합니다)"
         className="rounded-2xl border border-stone-300 px-4 py-2"
+        min={0}
+        step={1}
+        onKeyDown={handleNumberKeyDown}
+        onInput={handleNumberInput}
         {...register("existingLoanCount", { valueAsNumber: true })}
       />
     </label>

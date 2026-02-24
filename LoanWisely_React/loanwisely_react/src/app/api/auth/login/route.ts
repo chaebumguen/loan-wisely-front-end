@@ -21,14 +21,10 @@ const respond = (body: unknown, status: number): NextResponse => {
 
 export const POST = async (request: Request): Promise<NextResponse> => {
   if (env.backendUrl === "") {
-    return NextResponse.json({
-      data: {
-        userId: 1,
-        username: "demo",
-        accessToken: "demo-token",
-        expiresInSeconds: 3600,
-      },
-    });
+    return NextResponse.json(
+      { message: "백엔드 API 주소가 설정되지 않아 로그인 요청을 처리할 수 없습니다." },
+      { status: 503 },
+    );
   }
 
   const targetUrl = buildTargetUrl(request.url);

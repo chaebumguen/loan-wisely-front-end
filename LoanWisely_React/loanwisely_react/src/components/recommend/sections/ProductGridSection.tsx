@@ -41,19 +41,25 @@ const ProductGridSection = ({
 
   return (
     <div className="grid gap-4">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {visibleProducts.map((product) => {
-          const tags = dedupeTags(splitReasons(product.reason));
-          const fallback = dedupeTags(fallbackTags);
-          return (
-            <ProductCard
-              key={product.id}
-              {...product}
-              tags={tags.length > 0 ? tags : fallback}
-            />
-          );
-        })}
-      </div>
+      {visibleProducts.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 px-4 py-8 text-center text-sm text-stone-500">
+          표시할 추천 상품 데이터가 없습니다.
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {visibleProducts.map((product) => {
+            const tags = dedupeTags(splitReasons(product.reason));
+            const fallback = dedupeTags(fallbackTags);
+            return (
+              <ProductCard
+                key={product.id}
+                {...product}
+                tags={tags.length > 0 ? tags : fallback}
+              />
+            );
+          })}
+        </div>
+      )}
       {!showAll && products.length > 3 && (
         <button
           type="button"

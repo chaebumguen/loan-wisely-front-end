@@ -29,18 +29,20 @@ const respond = (body: unknown, status: number): NextResponse => {
   return NextResponse.json(body, { status });
 };
 
-const mockResponse = (): NextResponse =>
-  NextResponse.json({
-    summary: "",
-    levelUsed: "LV1",
-    levelStatus: "empty",
-    reasons: [],
-    riskNotes: [],
-  });
-
 export const GET = async (request: Request): Promise<NextResponse> => {
   if (env.backendUrl === "") {
-    return mockResponse();
+    return respond(
+      {
+        summary: "",
+        levelUsed: "",
+        levelStatus: "",
+        reasons: [],
+        riskNotes: [],
+        code: "BFF_BACKEND_NOT_CONFIGURED",
+        message: "백엔드 연결이 설정되지 않아 추천 설명을 불러올 수 없습니다.",
+      },
+      503,
+    );
   }
 
   const targetUrl = buildTargetUrl(request.url);
